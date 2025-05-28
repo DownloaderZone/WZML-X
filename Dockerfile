@@ -1,4 +1,4 @@
-FROM mysterysd/wzmlx:v3
+FROM mysterysd/wzmlx:hkwzv3
 
 LABEL maintainer="Beast Bots <github.com/BeastBots/MirrorBeast>"
 
