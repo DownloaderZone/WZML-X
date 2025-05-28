@@ -18,7 +18,7 @@ from ...ext_utils.task_manager import (
     check_running_tasks,
     stop_duplicate_check
 )
-from ...mirror_leech_utils.status_utils.mega_download_status import MegaDownloadStatus
+from ...mirror_leech_utils.status_utils.mega_dl_status import MegaDownloadStatus
 from ...mirror_leech_utils.status_utils.queue_status import QueueStatus
 from ...telegram_helper.message_utils import (
     auto_delete_message,
