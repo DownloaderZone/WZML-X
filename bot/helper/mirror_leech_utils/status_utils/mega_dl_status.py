@@ -38,7 +38,7 @@ class MegaDownloadStatus:
         return f"{self.progress_raw()}%"
 
     def status(self):
-        return MirrorStatus.STATUS_DOWNLOADING
+        return MirrorStatus.STATUS_DOWNLOAD
 
     def processed_bytes(self):
         return get_readable_file_size(self._obj.downloaded_bytes)
