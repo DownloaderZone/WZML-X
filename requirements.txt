@@ -6,7 +6,6 @@ anytree
 apscheduler
 aioaria2
 aioqbt
-cinemagoer
 cloudscraper
 dnspython
 fastapi
@@ -24,7 +23,6 @@ natsort
 par2cmdline-turbo
 pillow
 psutil
-pycountry
 pymongo
 pyrofork==2.2.11
 python-magic
