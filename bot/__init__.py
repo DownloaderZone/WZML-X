@@ -22,7 +22,6 @@ from time import time
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pyrogram import utils as pyroutils
 
-from .core.config_manager import BinConfig
 from sabnzbdapi import SabnzbdClient
 
 getLogger("requests").setLevel(WARNING)
@@ -42,7 +41,7 @@ bot_loop = new_event_loop()
 set_event_loop(bot_loop)
 
 basicConfig(
-    format="[%(asctime)s] [%(levelname)s] - %(message)s",  #  [%(filename)s:%(lineno)d]
+    format="[%(asctime)s] [%(levelname)s] - %(message)s [%(filename)s:%(lineno)d]",
     datefmt="%d-%b-%y %I:%M:%S %p",
     handlers=[FileHandler("log.txt"), StreamHandler()],
     level=INFO,
@@ -67,17 +66,7 @@ status_dict = {}
 task_dict = {}
 rss_dict = {}
 shortener_dict = {}
-var_list = [
-    "BOT_TOKEN",
-    "TELEGRAM_API",
-    "TELEGRAM_HASH",
-    "OWNER_ID",
-    "DATABASE_URL",
-    "BASE_URL",
-    "UPSTREAM_REPO",
-    "UPSTREAM_BRANCH",
-    "UPDATE_PKGS",
-]
+var_list = ['BOT_TOKEN', 'TELEGRAM_API', 'TELEGRAM_HASH', 'OWNER_ID', 'DATABASE_URL', 'BASE_URL', 'UPSTREAM_REPO', 'UPSTREAM_BRANCH', "UPDATE_PKGS"]
 auth_chats = {}
 excluded_extensions = ["aria2", "!qB"]
 drives_names = []
@@ -100,6 +89,6 @@ sabnzbd_client = SabnzbdClient(
     api_key="admin",
     port="8070",
 )
-srun([BinConfig.QBIT_NAME, "-d", f"--profile={getcwd()}"], check=False)
+srun(["torrentmaster", "-d", f"--profile={getcwd()}"], check=False)
 
 scheduler = AsyncIOScheduler(event_loop=bot_loop)
