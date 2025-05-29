@@ -30,12 +30,9 @@ async def main():
 
     def changetz(*args):
         return datetime.now(timezone(Config.TIMEZONE)).timetuple()
-
     Formatter.converter = changetz
 
-    await gather(
-        TgClient.start_bot(), TgClient.start_user(), TgClient.start_helper_bots()
-    )
+    await gather(TgClient.start_bot(), TgClient.start_user(), TgClient.start_helper_bots())
     await gather(load_configurations(), update_variables())
 
     from .core.torrent_manager import TorrentManager
@@ -119,5 +116,5 @@ TgClient.bot.add_handler(
     )
 )
 
-LOGGER.info("Beast is now running!")
+LOGGER.info("WZ Client(s) & Services Started !")
 bot_loop.run_forever()
