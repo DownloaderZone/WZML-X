@@ -1,3 +1,4 @@
+import re
 from contextlib import suppress
 from PIL import Image
 from hashlib import md5
