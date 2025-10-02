@@ -50,6 +50,23 @@ LOGGER = getLogger(__name__)
 
 
 class TelegramUploader:
+    @staticmethod
+    async def _should_skip_file(file_path, file_name, excluded_exts=None):
+        """Return True if the file should be skipped (hidden, temp, zero-size, or excluded extension)."""
+        if not await aiopath.exists(file_path):
+            return True
+        if file_name.startswith('.'):
+            return True
+        if '.getxfer' in file_name and file_name.endswith('.mega'):
+            return True
+        if excluded_exts:
+            for ext in excluded_exts:
+                if file_name.lower().endswith(ext):
+                    return True
+        f_size = await aiopath.getsize(file_path)
+        if f_size == 0:
+            return True
+        return False
     def __init__(self, listener, path):
         self._last_uploaded = 0
         self._processed_bytes = 0
@@ -314,12 +331,15 @@ class TelegramUploader:
             if not self._listener.is_cancelled:
                 LOGGER.error(f"Failed To Send in BotPM:\n{str(err)}")
 
-    async def upload(self):
+    async def upload(self) -> None:
+        """Uploads files to Telegram, skipping unwanted files and handling errors."""
         await self._user_settings()
         res = await self._msg_to_reply()
         if not res:
             return
         is_log_del = False
+        # Optionally get excluded extensions from config
+        excluded_exts = getattr(Config, "EXCLUDED_EXTENSIONS", [])
         for dirpath, _, files in natsorted(await sync_to_async(walk, self._path)):
             if dirpath.strip().endswith("/yt-dlp-thumb"):
                 continue
@@ -330,18 +350,21 @@ class TelegramUploader:
             for file_ in natsorted(files):
                 self._error = ""
                 self._up_path = f_path = ospath.join(dirpath, file_)
-                if not await aiopath.exists(self._up_path):
-                    LOGGER.error(f"{self._up_path} not exists! Continue uploading!")
+                # Use helper to skip unwanted files
+                if await self._should_skip_file(self._up_path, file_, excluded_exts):
+                    LOGGER.warning(f"Skipping unwanted file: {self._up_path}")
+                    # Remove zero-size files if present
+                    if await aiopath.exists(self._up_path):
+                        try:
+                            if await aiopath.getsize(self._up_path) == 0:
+                                await remove(self._up_path)
+                        except Exception as e:
+                            LOGGER.error(f"Failed to remove zero-size file: {self._up_path} - {e}")
+                    self._corrupted += 1
                     continue
                 try:
                     f_size = await aiopath.getsize(self._up_path)
                     self._total_files += 1
-                    if f_size == 0:
-                        LOGGER.error(
-                            f"{self._up_path} size is zero, telegram don't upload zero size files"
-                        )
-                        self._corrupted += 1
-                        continue
                     if self._listener.is_cancelled:
                         return
                     cap_mono = await self._prepare_file(file_, dirpath)
