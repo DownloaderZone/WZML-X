@@ -20,6 +20,15 @@ from os import cpu_count
 from time import time
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+import asyncio
+
+# Ensure event loop exists
+try:
+    asyncio.get_running_loop()
+except RuntimeError:
+    asyncio.set_event_loop(asyncio.new_event_loop())
+
+from pyrogram import Client
 from pyrogram import utils as pyroutils
 
 from .core.config_manager import BinConfig
