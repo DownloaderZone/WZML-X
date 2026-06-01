@@ -11,9 +11,10 @@ from logging import (
     ERROR,
 )
 from os import path, remove, environ
-from pymongo.mongo_client import MongoClient
+from pymongo import AsyncMongoClient
 from pymongo.server_api import ServerApi
 from subprocess import run as srun, call as scall
+from asyncio import run as arun
 
 getLogger("pymongo").setLevel(ERROR)
 
@@ -69,21 +70,33 @@ if not BOT_TOKEN:
 
 BOT_ID = BOT_TOKEN.split(":", 1)[0]
 
-if DATABASE_URL := config_file.get("DATABASE_URL", "").strip():
+async def fetch_database_config():
+    """Fetch configuration from MongoDB."""
+    global config_file
+    DATABASE_URL = config_file.get("DATABASE_URL", "").strip()
+    if not DATABASE_URL:
+        return
+
+    conn = None
     try:
-        conn = MongoClient(DATABASE_URL, server_api=ServerApi("1"))
+        conn = AsyncMongoClient(DATABASE_URL, server_api=ServerApi("1"))
         db = conn.beast
-        old_config = db.settings.deployConfig.find_one({"_id": BOT_ID}, {"_id": 0})
-        config_dict = db.settings.config.find_one({"_id": BOT_ID})
+        old_config = await db.settings.deployConfig.find_one({"_id": BOT_ID}, {"_id": 0})
+        config_dict = await db.settings.config.find_one({"_id": BOT_ID})
         if (
             old_config is not None and old_config == config_file or old_config is None
         ) and config_dict is not None:
             config_file["UPSTREAM_REPO"] = config_dict["UPSTREAM_REPO"]
             config_file["UPSTREAM_BRANCH"] = config_dict.get("UPSTREAM_BRANCH", "wzv3")
             config_file["UPDATE_PKGS"] = config_dict.get("UPDATE_PKGS", "True")
-        conn.close()
     except Exception as e:
         log_error(f"Database ERROR: {e}")
+    finally:
+        if conn:
+            await conn.close()
+
+if DATABASE_URL := config_file.get("DATABASE_URL", "").strip():
+    arun(fetch_database_config())
 
 UPSTREAM_REPO = config_file.get("UPSTREAM_REPO", "").strip()
 UPSTREAM_BRANCH = config_file.get("UPSTREAM_BRANCH", "").strip() or "wzv3"
@@ -95,8 +108,8 @@ if UPSTREAM_REPO:
     update = srun(
         [
             f"git init -q \
-                     && git config --global user.email 131198906+ThePrateekBhatia@users.noreply.github.com \
-                     && git config --global user.name Prateek Bhatia \
+                     && git config --global user.email 250646631+DownloaderrZone@users.noreply.github.com \
+                     && git config --global user.name Downloader Zone \
                      && git add . \
                      && git commit -sm update -q \
                      && git remote add origin {UPSTREAM_REPO} \

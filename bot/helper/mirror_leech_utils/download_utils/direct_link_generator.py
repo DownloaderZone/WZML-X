@@ -613,8 +613,6 @@ def osdn(url):
 
 
 def yandex_disk(url: str) -> str:
-    """Yandex.Disk direct link generator
-    Based on https://github.com/wldhx/yadisk-direct"""
     try:
         link = findall(r"\b(https?://(yadi\.sk|disk\.yandex\.(com|ru))\S+)", url)[0][0]
     except IndexError:
@@ -626,19 +624,6 @@ def yandex_disk(url: str) -> str:
         raise DirectDownloadLinkException(
             "ERROR: File not found/Download limit reached"
         ) from e
-
-
-def github(url):
-    """GitHub direct links generator"""
-    try:
-        findall(r"\bhttps?://.*github\.com.*releases\S+", url)[0]
-    except IndexError as e:
-        raise DirectDownloadLinkException("No GitHub Releases links found") from e
-    with create_scraper() as session:
-        _res = session.get(url, stream=True, allow_redirects=False)
-        if "location" in _res.headers:
-            return _res.headers["location"]
-        raise DirectDownloadLinkException("ERROR: Can't extract the link")
 
 
 def hxfile(url):
@@ -705,16 +690,16 @@ def onedrive(link):
         raise DirectDownloadLinkException("ERROR: Direct link not found")
     return resp["@content.downloadUrl"]
 
-
 def pixeldrain(url):
     try:
         url = url.rstrip("/")
-        code = url.split("/")[-1].split("?", 1)[0]
-        response = get("https://pd.1drv.eu.org/", allow_redirects=True)
-        return response.url + code
+        parts = url.split("/")
+        code = parts[-1].split("?", 1)[0]
+        if not code and len(parts) >= 2:
+            code = parts[-2].split("?", 1)[0]
+        return f"https://cdn.pixeldrain.eu.cc/{code}?download"
     except Exception as e:
         raise DirectDownloadLinkException("ERROR: Direct link not found")
-
 
 def streamtape(url):
     splitted_url = url.split("/")
@@ -1270,61 +1255,77 @@ def gofile(url):
             raise e
 
     def __fetch_links(session, _id, folderPath=""):
-        _url = f"https://api.gofile.io/contents/{_id}?wt=4fd6sg89d7s6&cache=true"
+        _url = f"https://api.gofile.io/contents/{_id}?cache=true"
+
+        time_slot = int(time_func()) // 14400
+        raw = f"{user_agent}::en-US::{token}::{time_slot}::g4f8fd9f12h14g"
+        wt = sha256(raw.encode()).hexdigest()
+
         headers = {
             "User-Agent": user_agent,
             "Accept-Encoding": "gzip, deflate, br",
             "Accept": "*/*",
             "Connection": "keep-alive",
-            "Authorization": "Bearer" + " " + token,
+            "Authorization": f"Bearer {token}",
+            "X-Website-Token": wt,
+            "X-BL": "en-US",
+            "Origin": "https://gofile.io",
+            "Referer": "https://gofile.io/",
         }
+
         if _password:
             _url += f"&password={_password}"
+
         try:
             _json = session.get(_url, headers=headers).json()
         except Exception as e:
             raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
-        if _json["status"] in "error-passwordRequired":
+
+        status = _json.get("status")
+        if status == "error-passwordRequired":
             raise DirectDownloadLinkException(
                 f"ERROR:\n{PASSWORD_ERROR_MESSAGE.format(url)}"
             )
-        if _json["status"] in "error-passwordWrong":
+        if status == "error-passwordWrong":
             raise DirectDownloadLinkException("ERROR: This password is wrong !")
-        if _json["status"] in "error-notFound":
+        if status == "error-notFound":
             raise DirectDownloadLinkException(
                 "ERROR: File not found on gofile's server"
             )
-        if _json["status"] in "error-notPublic":
+        if status == "error-notPublic":
             raise DirectDownloadLinkException("ERROR: This folder is not public")
+        if status != "ok":
+            raise DirectDownloadLinkException(f"ERROR: API returned {status}")
 
-        data = _json["data"]
+        data = _json.get("data") or {}
 
         if not details["title"]:
-            details["title"] = data["name"] if data["type"] == "folder" else _id
+            details["title"] = data.get("name") if data.get("type") == "folder" else _id
 
-        contents = data["children"]
+        contents = data.get("children") or {}
+
         for content in contents.values():
-            if content["type"] == "folder":
-                if not content["public"]:
+            if content.get("type") == "folder":
+                if not content.get("public", True):
                     continue
                 if not folderPath:
-                    newFolderPath = ospath.join(details["title"], content["name"])
+                    newFolderPath = ospath.join(details["title"], content.get("name", ""))
                 else:
-                    newFolderPath = ospath.join(folderPath, content["name"])
-                __fetch_links(session, content["id"], newFolderPath)
+                    newFolderPath = ospath.join(folderPath, content.get("name", ""))
+                __fetch_links(session, content.get("id"), newFolderPath)
             else:
                 if not folderPath:
                     folderPath = details["title"]
                 item = {
                     "path": ospath.join(folderPath),
-                    "filename": content["name"],
-                    "url": content["link"],
+                    "filename": content.get("name"),
+                    "url": content.get("link"),
                 }
-                if "size" in content:
-                    size = content["size"]
+                size = content.get("size")
+                if size is not None:
                     if isinstance(size, str) and size.isdigit():
                         size = float(size)
-                    details["total_size"] += size
+                    details["total_size"] += float(size or 0)
                 details["contents"].append(item)
 
     details = {"contents": [], "title": "", "total_size": 0}
@@ -1333,7 +1334,9 @@ def gofile(url):
             token = __get_token(session)
         except Exception as e:
             raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
-        details["header"] = f"Cookie: accountToken={token}"
+
+        details["header"] = f"Authorization: Bearer {token}"
+
         try:
             __fetch_links(session, _id)
         except Exception as e:

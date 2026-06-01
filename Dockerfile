@@ -1,4 +1,4 @@
-FROM downloaderzone/wzmlx:v3
+FROM downloaderzone/dzwzmlx:latest
 
 WORKDIR /usr/src/app
 RUN chmod 777 /usr/src/app

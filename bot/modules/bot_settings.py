@@ -687,8 +687,8 @@ async def edit_bot_settings(client, query):
         if await aiopath.exists(filename):
             await (
                 await create_subprocess_shell(
-                    f"git config --global user.email 131198906+ThePrateekBhatia@users.noreply.github.com \
-                    && git config --global user.name Prateek Bhatia \
+                    f"git config --global user.email 250646631+DownloaderrZone@users.noreply.github.com \
+                    && git config --global user.name Downloader Zone \
                     && git add -f {filename} \
                     && git commit -sm botsettings -q \
                     && git push origin {Config.UPSTREAM_BRANCH} -qf"
@@ -697,8 +697,8 @@ async def edit_bot_settings(client, query):
         else:
             await (
                 await create_subprocess_shell(
-                    f"git config --global user.email 131198906+ThePrateekBhatia@users.noreply.github.com \
-                    && git config --global user.name Prateek Bhatia \
+                    f"git config --global user.email 250646631+DownloaderrZone@users.noreply.github.com \
+                    && git config --global user.name Downloader Zone \
                     && git rm -r --cached {filename} \
                     && git commit -sm botsettings -q \
                     && git push origin {Config.UPSTREAM_BRANCH} -qf"
