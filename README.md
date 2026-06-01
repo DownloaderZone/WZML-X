@@ -41,8 +41,7 @@
 
 ## 🖥️ Live Demo & Public Mirror/Leech Group
 
-- Channel: [DOWNLOADER ZONE UPDATES](https://t.me/DOWNLOADERZONEUPDATES)
-- Group: [DOWNLOADER ZONE FREE MIRROR LEECH GROUP](https://t.me/downloaderzonefreemirrorleech)
+ - Access All Services: [Click here](https://t.me/DzoneeManagerBot)
 
 ---
 
@@ -140,8 +139,7 @@ restartses - Restart User Sessions
 ---
 
 ## 🏷️ Credits & Authors
-- **Downloader Zone** ([Telegram](https://t.me/DOWNLOADERZONEUPDATES), [GitHub](https://github.com/DOWNLOADER-ZONE))
-- **BeastBots Team** ([Telegram](https://t.me/MirrorBeast), [GitHub](https://github.com/BeastBots))
+- **Downloader Zone** ([Telegram](https://t.me/DzoneeManagerBot), [GitHub](https://github.com/DownloaderZone))
 - Base Repo is [WZML-X](https://github.com/SilentDemonSD/WZML-X)
 
 ---
@@ -155,4 +153,3 @@ This project is licensed under the [MIT License](LICENSE).
 <p align="center">
   <b>Made with ❤️ by Downloader Zone</b>
 </p>
-
